@@ -1,11 +1,16 @@
 TARGET := vhdp
-#LEX_FLAGS := -d
-LEX_FLAGS := 
+LEX_FLAGS := -d
+#LEX_FLAGS := 
+
+CFLAGS += -g -O0 -DBISON_DEBUG
+CXXFLAGS += -g -O0 -DBISON_DEBUG
 
 SRC := \
 	bison.tab.o \
 	lexer.yy.o \
 	backend.o \
+	Port.o \
+	Entity.o \
 	main.o
 
 .PHONY:

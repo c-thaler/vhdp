@@ -2,6 +2,7 @@
 /***** C Stuff *****/
 #include <stdio.h>
 #include <string>
+#include <list>
 
 #include "bison.tab.hpp"
 
@@ -31,6 +32,7 @@ vect     (\"[01-x]*\")
 "port"           {return PORT;}
 "in"             {return IN;}
 "out"            {return OUT;}
+"inout"          {return INOUT;}
 "library"        {return LIBRARY;}
 "use"            {return USE;}
 "for"            {return FOR;}

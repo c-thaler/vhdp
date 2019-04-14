@@ -4,6 +4,11 @@
 
 #include "bison_def.h"
 
+#include "Entity.h"
+
+extern Entity *result_entity;
+extern Entity *result_arch;
+
 void print_help(char* name) {
 	fprintf(stderr, "\nUsage:\t%s { [-h] file }\n"
 					"\t-h      : show this help\n"
@@ -38,16 +43,32 @@ int main(int argc, char *argv[]) {
 		goto fail;
 	}
 
-    // Open a file handle to a particular file:
-    file = fopen(filename, "r");
+    while(filename) {
+        std::cout << "Parsing " << filename << "..." << std::endl;
 
-    // Make sure it is valid:
-    if (!file) {
-        std::cerr << "Could not open " << filename << std::endl;
-        return -1;
-    }
+        // Open a file handle to a particular file:
+        file = fopen(filename, "r");
 
-    vhdp_parse_file(file);
+        // Make sure it is valid:
+        if (!file) {
+            std::cerr << "Could not open " << filename << std::endl;
+            return -1;
+        }
+
+        vhdp_parse_file(file);
+
+        if(result_entity)
+            std::cout << result_entity->toString();
+        else
+            std::cout << "No entity found!" << std::endl;
+
+        fclose(file);
+        
+        if(optind < argc)
+            filename = argv[optind++];
+        else
+            filename = nullptr;
+    };
 
 end:
     return 0;
