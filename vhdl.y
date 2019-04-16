@@ -11,6 +11,8 @@
   #include "Entity.h"
 
   // Declare stuff from Flex that Bison needs to know about:
+  extern int yylineno;  // defined and maintained in lex
+  extern char *yytext;  // defined and maintained in lex
   extern int yylex();
   extern int yyparse();
   extern FILE *yyin;
@@ -137,16 +139,20 @@ port:
 
 type:
       NAME
-    | NAME '(' range ')'
+    | NAME '(' rangelist ')'
     ;
 
 signal:
       NAME
-    | NAME '(' range ')'
+    | NAME '(' rangelist ')'
     ;
 
+rangelist:
+    rangelist ',' range
+    | range 
+
 range:
-      simple_expr
+    simple_expr
     | simple_expr DOWNTO simple_expr
     | simple_expr TO simple_expr
     ;
@@ -276,6 +282,6 @@ int vhdp_parse_file(FILE *file) {
 }
 
 void yyerror(const char *s) {
-  printf("EEK, parse error!  Message: %s\n", s);
+  fprintf(stderr, "ERROR: %s at token '%s' on line %d\n", s, yytext, yylineno);
   exit(-1);
 }

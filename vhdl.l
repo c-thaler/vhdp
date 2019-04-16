@@ -11,6 +11,7 @@ int linenum = 1;
 void showError();
 %}
 %option noyywrap
+%option yylineno
 
 /***** RegEx *****/
 comment  (--[^\n]*)
