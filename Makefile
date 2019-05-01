@@ -1,9 +1,12 @@
 TARGET := vhdp
-LEX_FLAGS := -d
-#LEX_FLAGS := 
+#LEX_FLAGS := -d
+LEX_FLAGS := 
 
-CFLAGS += -g -O0 -DBISON_DEBUG
-CXXFLAGS += -g -O0 -DBISON_DEBUG
+CFLAGS += -g
+CXXFLAGS += -g
+
+#CFLAGS += -DBISON_DEBUG
+#CXXFLAGS += -O0 -DBISON_DEBUG
 
 SRC := \
 	bison.tab.o \
