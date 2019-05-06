@@ -31,6 +31,7 @@ vect     (\"[01-x]*\")
 "is"             {return IS;}
 "of"             {return OF;}
 "port"           {return PORT;}
+"generic"        {return GENERIC;}
 "in"             {return IN;}
 "out"            {return OUT;}
 "inout"          {return INOUT;}
@@ -47,8 +48,11 @@ vect     (\"[01-x]*\")
 "and"            {return AND;}
 "or"             {return OR;}
 "xor"            {return XOR;}
+"others"         {return OTHERS;}
+"range"          {return RANGE;}
 "<="             {return S_ASSIGN;}
 ":="             {return V_ASSIGN;}
+"=>"             {return ASSOC;}
 {literal}        {return LITERAL;}
 {name}           {yylval.str = new std::string(yytext); return NAME;}
 {char}           {return CHAR;}

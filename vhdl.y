@@ -46,11 +46,13 @@
 %token IF THEN
 %token TO DOWNTO
 %token BEGN END
+%token GENERIC
 %token <pl> PORT
 %token <n> IN OUT INOUT
 %token SIGNAL VARIABLE
 %token XOR AND OR NOT CONCAT
-%token S_ASSIGN V_ASSIGN
+%token S_ASSIGN V_ASSIGN ASSOC
+%token OTHERS RANGE
 
 %token <str> NAME
 %token LITERAL CHAR VECT
@@ -99,6 +101,9 @@ entity:
     ENTITY NAME IS portlist ';' entity_end ';' {
       $$ = new Entity($2, $4);
     }
+    | ENTITY NAME IS genericlist ';' portlist ';' entity_end ';' {
+      $$ = new Entity($2, $6);
+    }
     ;
 
 entity_end:
@@ -107,6 +112,17 @@ entity_end:
     | END NAME
     | END
     ;
+
+genericlist:
+    GENERIC '(' generics ')'
+
+generics:
+    generics ';' generic
+    | generic
+
+generic:
+    namelist ':' type
+    | namelist ':' type V_ASSIGN expr
 
 portlist:
     PORT '(' ports ')' {
@@ -135,11 +151,22 @@ port:
 
       $$ = pl;
     }
+    | namelist ':' direction type V_ASSIGN expr {
+      std::list<Port*> *pl = new std::list<Port*>;
+
+      for(std::string *name : *$1) {
+        pl->push_front(new Port(name, (Direction) $3, $4));
+      }
+
+      $$ = pl;
+    }
     ;
 
 type:
       NAME
     | NAME '(' rangelist ')'
+    | NAME RANGE simple_expr TO simple_expr
+    | NAME RANGE simple_expr DOWNTO simple_expr
     ;
 
 signal:
@@ -242,7 +269,18 @@ expr:
     | VECT
     | signal
     | LITERAL
+    | aggregate
     ;
+
+aggregate:
+    '(' aggregate_list ')'
+
+aggregate_list:
+    aggregate_list ',' aggregate_element
+    | aggregate_element
+
+aggregate_element:
+    OTHERS ASSOC expr
 
 simple_expr:
       '(' simple_expr ')'
@@ -272,6 +310,9 @@ bool_expr:
 int vhdp_parse_file(FILE *file) {
   // Set Flex to read from it instead of defaulting to STDIN:
   yyin = file;
+
+  // reset parser
+  yylineno = 1;
 
   #ifdef BISON_DEBUG
   yydebug = 1;
