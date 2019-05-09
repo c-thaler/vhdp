@@ -49,7 +49,7 @@
 %token IF THEN ELSE WHEN
 %token TO DOWNTO
 %token BEGN END
-%token GENERIC
+%token GENERIC MAP
 %token <pl> PORT
 %token <n> IN OUT INOUT
 %token SIGNAL VARIABLE CONSTANT
@@ -220,9 +220,16 @@ direction:
     ;
 
 architecture:
-    ARCHITECTURE ID OF ID IS arch_decls BEGN arch_body END ID ';' {
+    ARCHITECTURE ID OF ID IS arch_decls BEGN arch_body arch_end ';' {
       $$ = new Arch($2, $4);
     }
+    ;
+
+arch_end:
+    END ARCHITECTURE ID
+    | END ARCHITECTURE
+    | END ID
+    | END
     ;
 
 arch_decls:
@@ -244,6 +251,7 @@ arch_body:
 arch_line:
       signal_assign
     | process
+    | instantiation
     ;
 
 // Process
@@ -283,6 +291,32 @@ proc_line:
     | for_loop
     | if_then
     ;
+
+instantiation:
+    ID ':' ENTITY ID mappings ';'
+    ;
+
+mappings:
+    mappings port_map
+    | mappings generic_map
+    | port_map
+    | generic_map
+    ;
+
+port_map:
+    PORT MAP '(' maplist ')'
+
+generic_map:
+    GENERIC MAP '(' maplist ')'
+    ;
+
+maplist:
+    maplist ',' association
+    | association
+    ;
+
+association:
+    ID ASSOC ID
 
 signal_assign:
     name S_ASSIGN expr ';'

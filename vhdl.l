@@ -32,6 +32,7 @@ vect     (\"[01-x]*\")
 "of"             {return OF;}
 "port"           {return PORT;}
 "generic"        {return GENERIC;}
+"map"            {return MAP;}
 "in"             {return IN;}
 "out"            {return OUT;}
 "inout"          {return INOUT;}
