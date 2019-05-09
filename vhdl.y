@@ -60,6 +60,12 @@
 %token <str> ID
 %token LITERAL CHAR VECT
 
+%left AND OR XOR
+%left '=' '<' '>'
+%left '+' '-'
+%left '*' '/'
+%left '&'
+
 %type <n> direction
 %type <str> type
 %type <sl> idlist
@@ -84,9 +90,7 @@ vhdl_top:
     ;
 
 header:
-      header library
-    | header use
-    | library
+    library
     | use
     ;
 
@@ -223,7 +227,6 @@ architecture:
 
 arch_decls:
     arch_decls arch_decl
-    | arch_decl
     | /* empty */
     ;
 
@@ -246,7 +249,7 @@ arch_line:
 // Process
 // Handling all the stuff for process definitions
 process:
-      process_name.opt PROCESS '(' sens_list ')' process_decls.opt BEGN proc_body END PROCESS ';'
+      process_name.opt PROCESS '(' sens_list ')' process_decls BEGN proc_body END PROCESS ';'
     ;
 
 process_name.opt:
@@ -259,10 +262,9 @@ sens_list:
     | ID
     ;
 
-process_decls.opt:
-      process_decls.opt process_decl
-    | process_decl
-    |
+process_decls:
+      process_decls process_decl
+    | /* empty */
     ;
 
 process_decl:
@@ -272,7 +274,6 @@ process_decl:
 
 proc_body:
       proc_body proc_line
-    | proc_line
     | /* empty */
     ;
 
