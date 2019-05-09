@@ -5,9 +5,10 @@
 #include "bison_def.h"
 
 #include "Entity.h"
+#include "Arch.h"
 
 extern Entity *result_entity;
-extern Entity *result_arch;
+extern Arch *result_arch;
 
 void print_help(char* name) {
 	fprintf(stderr, "\nUsage:\t%s { [-h] file }\n"
@@ -61,6 +62,11 @@ int main(int argc, char *argv[]) {
             std::cout << result_entity->toString();
         else
             std::cout << "No entity found!" << std::endl;
+
+        if(result_arch)
+            std::cout << result_arch->toString();
+        else
+            std::cout << "No architecture found!" << std::endl;
 
         fclose(file);
         

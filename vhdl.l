@@ -16,7 +16,7 @@ void showError();
 /***** RegEx *****/
 comment  (--[^\n]*)
 literal  ([0-9])+
-name     ([a-zA-Z_]){1}([a-zA-Z0-9_])*
+name     ([a-zA-Z_]){1}([a-zA-Z0-9_\.])*
 space    ([ \t])+
 char     (\'[01-x]\')
 vect     (\"[01-x]*\")
@@ -39,12 +39,15 @@ vect     (\"[01-x]*\")
 "use"            {return USE;}
 "for"            {return FOR;}
 "if"             {return IF;}
+"else"           {return ELSE;}
 "then"           {return THEN;}
+"when"           {return WHEN;}
 "loop"           {return LOOP;}
 "to"             {return TO;}
 "downto"         {return DOWNTO;}
 "signal"         {return SIGNAL;}
 "variable"       {return VARIABLE;}
+"constant"       {return CONSTANT;}
 "and"            {return AND;}
 "or"             {return OR;}
 "xor"            {return XOR;}

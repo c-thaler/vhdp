@@ -5,8 +5,8 @@ LEX_FLAGS :=
 CFLAGS += -g
 CXXFLAGS += -g
 
-#CFLAGS += -DBISON_DEBUG
-#CXXFLAGS += -O0 -DBISON_DEBUG
+CFLAGS += -DBISON_DEBUG
+CXXFLAGS += -O0 -DBISON_DEBUG
 
 SRC := \
 	bison.tab.o \
@@ -14,6 +14,7 @@ SRC := \
 	backend.o \
 	Port.o \
 	Entity.o \
+	Arch.o \
 	main.o
 
 .PHONY:
@@ -23,11 +24,11 @@ lexer.yy.cpp: vhdl.l
 	lex $(LEX_FLAGS) -o $@ $^
 
 bison.tab.cpp: vhdl.y
-	bison -t -d -o $@ $^
+	bison --report=state -t -d -o $@ $^
 
 $(TARGET): $(SRC)
 	$(CXX) -o $@ $^
 
 .PHONY:
 clean:
-	rm *.o *.yy.cpp *.tab.cpp *.tab.hpp $(TARGET)
+	rm *.o *.yy.cpp *.tab.cpp *.tab.hpp *.output $(TARGET)

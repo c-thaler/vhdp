@@ -9,6 +9,7 @@
   #include "backend.h"
   #include "Port.h"
   #include "Entity.h"
+  #include "Arch.h"
 
   // Declare stuff from Flex that Bison needs to know about:
   extern int yylineno;  // defined and maintained in lex
@@ -18,7 +19,7 @@
   extern FILE *yyin;
 
   Entity *result_entity = nullptr;
-  Entity *result_arch = nullptr;
+  Arch *result_arch = nullptr;
  
   void yyerror(const char *s);
 %}
@@ -26,6 +27,7 @@
 %code requires {
   #include "Port.h"
   #include "Entity.h"
+  #include "Arch.h"
 }
 
 %union {
@@ -34,6 +36,7 @@
 
   Entity *e;
   Port *p;
+  Arch *a;
 
   std::list<std::string*> *sl; /* String list */
   std::list<Port*> *pl; /* Port list */
@@ -43,13 +46,13 @@
 %token ENTITY ARCHITECTURE PROCESS
 %token CASE FOR LOOP GENERATE
 %token OF IS
-%token IF THEN
+%token IF THEN ELSE WHEN
 %token TO DOWNTO
 %token BEGN END
 %token GENERIC
 %token <pl> PORT
 %token <n> IN OUT INOUT
-%token SIGNAL VARIABLE
+%token SIGNAL VARIABLE CONSTANT
 %token XOR AND OR NOT CONCAT
 %token S_ASSIGN V_ASSIGN ASSOC
 %token OTHERS RANGE
@@ -62,6 +65,7 @@
 %type <sl> namelist
 %type <pl> portlist port ports
 %type <e> entity
+%type <a> architecture
 
 %%
 vhdl_file:
@@ -74,7 +78,9 @@ vhdl_top:
     | entity {
       result_entity = $1;
     }
-    | architecture
+    | architecture{
+      result_arch = $1;
+    }
     ;
 
 header:
@@ -203,7 +209,20 @@ direction:
     ;
 
 architecture:
-    ARCHITECTURE NAME OF NAME IS BEGN arch_body END NAME ';' {vhdp_arch();}
+    ARCHITECTURE NAME OF NAME IS arch_decls BEGN arch_body END NAME ';' {
+      $$ = new Arch($2, $4);
+    }
+    ;
+
+arch_decls:
+    arch_decls arch_decl
+    | arch_decl
+    ;
+
+arch_decl:
+      SIGNAL NAME ':' type ';'
+    |  CONSTANT NAME ':' type ';'
+    |  CONSTANT NAME ':' type V_ASSIGN expr ';'
     ;
 
 arch_body:
@@ -216,21 +235,28 @@ arch_line:
     | process
     ;
 
+// Process
+// Handling all the stuff for process definitions
 process:
-      PROCESS '(' sens_list ')' declarations BEGN proc_body END PROCESS ';'
+      process_name.opt PROCESS '(' sens_list ')' process_decls.opt BEGN proc_body END PROCESS ';'
     ;
+
+process_name.opt:
+    NAME ':'
+    |
 
 sens_list:
       sens_list ',' NAME
     | NAME
     ;
 
-declarations:
-      declarations declaration
-    | declaration
+process_decls.opt:
+      process_decls.opt process_decl
+    | process_decl
+    |
     ;
 
-declaration:
+process_decl:
       SIGNAL NAME ':' type ';'
     | VARIABLE NAME ':' type ';'
     ;
@@ -238,6 +264,7 @@ declaration:
 proc_body:
       proc_body proc_line
     | proc_line
+    | /* empty */
     ;
 
 proc_line:
@@ -249,11 +276,17 @@ proc_line:
 
 signal_assign:
     signal S_ASSIGN expr ';'
+    | signal S_ASSIGN cond_assign ';'
     ;
 
 variable_assign:
     signal V_ASSIGN expr ';'
+    | signal V_ASSIGN cond_assign ';'
     ;
+
+cond_assign:
+    expr WHEN expr ELSE expr
+//    | expr WHEN expr ELSE cond_assign
 
 expr:
       '(' expr ')'
@@ -265,12 +298,23 @@ expr:
     | expr '-' expr
     | expr '*' expr
     | expr '/' expr
+    | expr '=' expr
+    | expr '<' expr
+    | expr '>' expr
+    | func_call
     | CHAR
     | VECT
     | signal
     | LITERAL
     | aggregate
+    | record_member
     ;
+
+func_call:
+    NAME '(' expr ')'
+
+record_member:
+    NAME '.' NAME
 
 aggregate:
     '(' aggregate_list ')'
@@ -282,6 +326,8 @@ aggregate_list:
 aggregate_element:
     OTHERS ASSOC expr
 
+// -- Simple expression --
+// As used in range expressions, e.g. (A-1 downto B+8).
 simple_expr:
       '(' simple_expr ')'
     | simple_expr '+' simple_expr
@@ -297,13 +343,8 @@ for_loop:
     ;
 
 if_then:
-    IF bool_expr THEN proc_body END IF ';'
-    ;
-
-bool_expr:
-      expr '=' expr
-    | expr '<' expr
-    | expr '>' expr
+    IF expr THEN proc_body END IF ';'
+    | IF expr THEN proc_body ELSE proc_body END IF ';'
     ;
 %%
 
