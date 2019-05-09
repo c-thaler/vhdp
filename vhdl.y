@@ -57,12 +57,12 @@
 %token S_ASSIGN V_ASSIGN ASSOC
 %token OTHERS RANGE
 
-%token <str> NAME
+%token <str> ID
 %token LITERAL CHAR VECT
 
 %type <n> direction
 %type <str> type
-%type <sl> namelist
+%type <sl> idlist
 %type <pl> portlist port ports
 %type <e> entity
 %type <a> architecture
@@ -78,7 +78,7 @@ vhdl_top:
     | entity {
       result_entity = $1;
     }
-    | architecture{
+    | architecture {
       result_arch = $1;
     }
     ;
@@ -91,44 +91,56 @@ header:
     ;
 
 library:
-    LIBRARY NAME ';'
+    LIBRARY ID ';'
     ;
 
 use:
-    USE qual_name ';'
+    USE ID ';'
     ;
 
-qual_name:
-      qual_name '.' NAME
-    | NAME
+name:
+    ID
+    | name_param
+    ;
+
+name_param:
+    ID '(' param ')'
+    ;
+
+param:
+    expr
+    | range
     ;
 
 entity:
-    ENTITY NAME IS portlist ';' entity_end ';' {
+    ENTITY ID IS portlist ';' entity_end ';' {
       $$ = new Entity($2, $4);
     }
-    | ENTITY NAME IS genericlist ';' portlist ';' entity_end ';' {
+    | ENTITY ID IS genericlist ';' portlist ';' entity_end ';' {
       $$ = new Entity($2, $6);
     }
     ;
 
 entity_end:
-    END ENTITY NAME
+    END ENTITY ID
     | END ENTITY
-    | END NAME
+    | END ID
     | END
     ;
 
 genericlist:
     GENERIC '(' generics ')'
+    ;
 
 generics:
     generics ';' generic
     | generic
+    ;
 
 generic:
-    namelist ':' type
-    | namelist ':' type V_ASSIGN expr
+    idlist ':' type
+    | idlist ':' type V_ASSIGN expr
+    ;
 
 portlist:
     PORT '(' ports ')' {
@@ -148,7 +160,7 @@ ports:
     ;
 
 port:
-    namelist ':' direction type {
+    idlist ':' direction type {
       std::list<Port*> *pl = new std::list<Port*>;
 
       for(std::string *name : *$1) {
@@ -157,7 +169,7 @@ port:
 
       $$ = pl;
     }
-    | namelist ':' direction type V_ASSIGN expr {
+    | idlist ':' direction type V_ASSIGN expr {
       std::list<Port*> *pl = new std::list<Port*>;
 
       for(std::string *name : *$1) {
@@ -169,32 +181,27 @@ port:
     ;
 
 type:
-      NAME
-    | NAME '(' rangelist ')'
-    | NAME RANGE simple_expr TO simple_expr
-    | NAME RANGE simple_expr DOWNTO simple_expr
-    ;
-
-signal:
-      NAME
-    | NAME '(' rangelist ')'
+      ID
+    | ID '(' rangelist ')'
+    | ID RANGE expr TO expr
+    | ID RANGE expr DOWNTO expr
     ;
 
 rangelist:
     rangelist ',' range
-    | range 
-
-range:
-    simple_expr
-    | simple_expr DOWNTO simple_expr
-    | simple_expr TO simple_expr
+    | range
     ;
 
-namelist:
-    namelist ',' NAME {
+range:
+    expr DOWNTO expr
+    | expr TO expr
+    ;
+
+idlist:
+    idlist ',' ID {
         $1->push_front($3);
       }
-    | NAME {
+    | ID {
         std::list<std::string*> *sl = new std::list<std::string*>;
         sl->push_back($1);
 
@@ -209,7 +216,7 @@ direction:
     ;
 
 architecture:
-    ARCHITECTURE NAME OF NAME IS arch_decls BEGN arch_body END NAME ';' {
+    ARCHITECTURE ID OF ID IS arch_decls BEGN arch_body END ID ';' {
       $$ = new Arch($2, $4);
     }
     ;
@@ -217,12 +224,13 @@ architecture:
 arch_decls:
     arch_decls arch_decl
     | arch_decl
+    | /* empty */
     ;
 
 arch_decl:
-      SIGNAL NAME ':' type ';'
-    |  CONSTANT NAME ':' type ';'
-    |  CONSTANT NAME ':' type V_ASSIGN expr ';'
+      SIGNAL ID ':' type ';'
+    |  CONSTANT ID ':' type ';'
+    |  CONSTANT ID ':' type V_ASSIGN expr ';'
     ;
 
 arch_body:
@@ -242,12 +250,13 @@ process:
     ;
 
 process_name.opt:
-    NAME ':'
+    ID ':'
     |
+    ;
 
 sens_list:
-      sens_list ',' NAME
-    | NAME
+      sens_list ',' ID
+    | ID
     ;
 
 process_decls.opt:
@@ -257,8 +266,8 @@ process_decls.opt:
     ;
 
 process_decl:
-      SIGNAL NAME ':' type ';'
-    | VARIABLE NAME ':' type ';'
+      SIGNAL ID ':' type ';'
+    | VARIABLE ID ':' type ';'
     ;
 
 proc_body:
@@ -275,18 +284,19 @@ proc_line:
     ;
 
 signal_assign:
-    signal S_ASSIGN expr ';'
-    | signal S_ASSIGN cond_assign ';'
+    name S_ASSIGN expr ';'
+    | name S_ASSIGN cond_assign ';'
     ;
 
 variable_assign:
-    signal V_ASSIGN expr ';'
-    | signal V_ASSIGN cond_assign ';'
+    name V_ASSIGN expr ';'
+    | name V_ASSIGN cond_assign ';'
     ;
 
 cond_assign:
     expr WHEN expr ELSE expr
-//    | expr WHEN expr ELSE cond_assign
+    | expr WHEN expr ELSE cond_assign
+    ;
 
 expr:
       '(' expr ')'
@@ -301,45 +311,28 @@ expr:
     | expr '=' expr
     | expr '<' expr
     | expr '>' expr
-    | func_call
     | CHAR
     | VECT
-    | signal
-    | LITERAL
+    | name
+    | LITERAL 
     | aggregate
-    | record_member
     ;
-
-func_call:
-    NAME '(' expr ')'
-
-record_member:
-    NAME '.' NAME
 
 aggregate:
     '(' aggregate_list ')'
+    ;
 
 aggregate_list:
     aggregate_list ',' aggregate_element
     | aggregate_element
+    ;
 
 aggregate_element:
     OTHERS ASSOC expr
-
-// -- Simple expression --
-// As used in range expressions, e.g. (A-1 downto B+8).
-simple_expr:
-      '(' simple_expr ')'
-    | simple_expr '+' simple_expr
-    | simple_expr '-' simple_expr
-    | simple_expr '*' simple_expr
-    | simple_expr '/' simple_expr
-    | LITERAL
-    | NAME
     ;
 
 for_loop:
-    FOR NAME IN range LOOP proc_body END LOOP ';'
+    FOR ID IN range LOOP proc_body END LOOP ';'
     ;
 
 if_then:

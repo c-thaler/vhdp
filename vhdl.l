@@ -16,7 +16,7 @@ void showError();
 /***** RegEx *****/
 comment  (--[^\n]*)
 literal  ([0-9])+
-name     ([a-zA-Z_]){1}([a-zA-Z0-9_\.])*
+id       ([a-zA-Z_]){1}([a-zA-Z0-9_\.])*
 space    ([ \t])+
 char     (\'[01-x]\')
 vect     (\"[01-x]*\")
@@ -57,7 +57,7 @@ vect     (\"[01-x]*\")
 ":="             {return V_ASSIGN;}
 "=>"             {return ASSOC;}
 {literal}        {return LITERAL;}
-{name}           {yylval.str = new std::string(yytext); return NAME;}
+{id}             {yylval.str = new std::string(yytext); return ID;}
 {char}           {return CHAR;}
 {vect}           {return VECT;}
 "&"              {return '&';}
