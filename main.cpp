@@ -13,7 +13,7 @@ extern Arch *result_arch;
 void print_help(char* name) {
 	fprintf(stderr, "\nUsage:\t%s { [-h] file }\n"
 					"\t-h      : show this help\n"
-					"\tfile  : length of data in bytes to act upon, starting at address\n",
+					"\tfile    : length of data in bytes to act upon, starting at address\n",
 					name);
 }
 
