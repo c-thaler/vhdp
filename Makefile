@@ -3,7 +3,7 @@ TARGET := vhdp
 LEX_FLAGS := 
 
 CFLAGS += -g
-CXXFLAGS += -g
+CXXFLAGS += -g -std=c++11
 
 #CFLAGS += -DBISON_DEBUG
 #CXXFLAGS += -O0 -DBISON_DEBUG
