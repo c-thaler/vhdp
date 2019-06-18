@@ -56,6 +56,7 @@
 %token XOR AND OR NOT CONCAT
 %token S_ASSIGN V_ASSIGN ASSOC
 %token OTHERS RANGE
+%token PURE FUNCTION RETURN
 
 %token <str> ID
 %token LITERAL CHAR VECT
@@ -65,6 +66,7 @@
 %left '+' '-'
 %left '*' '/'
 %left '&'
+%left TO DOWNTO
 
 %type <n> direction
 %type <str> type
@@ -108,12 +110,12 @@ name:
     ;
 
 name_param:
-    ID '(' param ')'
+    ID '(' expr_list ')'
     ;
 
-param:
-    expr
-    | range
+expr_list:
+      expr_list ',' expr
+    | expr
     ;
 
 entity:
@@ -186,19 +188,8 @@ port:
 
 type:
       ID
-    | ID '(' rangelist ')'
-    | ID RANGE expr TO expr
-    | ID RANGE expr DOWNTO expr
-    ;
-
-rangelist:
-    rangelist ',' range
-    | range
-    ;
-
-range:
-    expr DOWNTO expr
-    | expr TO expr
+    | ID '(' expr_list ')'
+    | ID RANGE expr
     ;
 
 idlist:
@@ -217,6 +208,11 @@ direction:
       IN    {$$ = DIR_IN;}
     | OUT   {$$ = DIR_OUT;}
     | INOUT {$$ = DIR_INOUT;}
+    ;
+
+direction.opt:
+    direction
+    |
     ;
 
 architecture:
@@ -239,8 +235,9 @@ arch_decls:
 
 arch_decl:
       SIGNAL ID ':' type ';'
-    |  CONSTANT ID ':' type ';'
-    |  CONSTANT ID ':' type V_ASSIGN expr ';'
+    | CONSTANT ID ':' type ';'
+    | CONSTANT ID ':' type V_ASSIGN expr ';'
+    | function
     ;
 
 arch_body:
@@ -252,6 +249,46 @@ arch_line:
       signal_assign
     | process
     | instantiation
+    ;
+
+// Function
+// Handle all the function declaration and definition stuff
+// We allow all statements from processes for functions. Maybe that is not
+// really allowed by VHDL syntax.
+function:
+      function_pure.opt FUNCTION ID '(' function_params ')' RETURN type IS function_decls BEGN proc_body function_end ';'
+
+function_pure.opt:
+    PURE
+    |
+    ;
+
+function_end:
+    END FUNCTION ID
+    | END FUNCTION
+    | END ID
+    | END
+    ;
+
+function_params:
+      function_params ';' function_param
+    | function_param
+    ;
+
+function_param:
+      idlist ':' direction.opt type
+    | idlist ':' direction.opt type V_ASSIGN expr 
+    ;
+
+function_decls:
+    function_decls function_decl
+    | /* empty */
+    ;
+
+function_decl:
+      VARIABLE ID ':' type ';'
+    | CONSTANT ID ':' type ';'
+    | CONSTANT ID ':' type V_ASSIGN expr ';'
     ;
 
 // Process
@@ -290,6 +327,7 @@ proc_line:
     | signal_assign
     | for_loop
     | if_then
+    | return
     ;
 
 instantiation:
@@ -335,6 +373,7 @@ cond_assign:
 
 expr:
       '(' expr ')'
+    | '-' expr
     | expr AND expr
     | expr OR expr
     | expr XOR expr
@@ -346,6 +385,9 @@ expr:
     | expr '=' expr
     | expr '<' expr
     | expr '>' expr
+    | expr TO expr
+    | expr DOWNTO expr
+    | name '\'' name
     | CHAR
     | VECT
     | name
@@ -367,13 +409,16 @@ aggregate_element:
     ;
 
 for_loop:
-    FOR ID IN range LOOP proc_body END LOOP ';'
+    FOR ID IN expr LOOP proc_body END LOOP ';'
     ;
 
 if_then:
     IF expr THEN proc_body END IF ';'
     | IF expr THEN proc_body ELSE proc_body END IF ';'
     ;
+
+return:
+    RETURN expr ';'
 %%
 
 int vhdp_parse_file(FILE *file) {

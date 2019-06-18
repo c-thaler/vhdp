@@ -49,6 +49,9 @@ vect     (\"[01-x]*\")
 "signal"         {return SIGNAL;}
 "variable"       {return VARIABLE;}
 "constant"       {return CONSTANT;}
+"pure"           {return PURE;}
+"function"       {return FUNCTION;}
+"return"         {return RETURN;}
 "and"            {return AND;}
 "or"             {return OR;}
 "xor"            {return XOR;}
