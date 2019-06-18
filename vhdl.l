@@ -14,12 +14,13 @@ void showError();
 %option yylineno
 
 /***** RegEx *****/
-comment  (--[^\n]*)
-literal  ([0-9])+
-id       ([a-zA-Z_]){1}([a-zA-Z0-9_\.])*
-space    ([ \t])+
-char     (\'[01-x]\')
-vect     (\"[01-x]*\")
+comment   (--[^\n]*)
+literal   ([0-9])+
+id        ([a-zA-Z_]){1}([a-zA-Z0-9_\.])*
+attribute (\'([a-zA-Z])*)
+space     ([ \t])+
+char      (\'[01-x]\')
+vect      (\"[01-x]*\")
 
 /***** Token specification *****/
 %%
@@ -52,6 +53,7 @@ vect     (\"[01-x]*\")
 "pure"           {return PURE;}
 "function"       {return FUNCTION;}
 "return"         {return RETURN;}
+"not"            {return NOT;}
 "and"            {return AND;}
 "or"             {return OR;}
 "xor"            {return XOR;}
@@ -64,6 +66,7 @@ vect     (\"[01-x]*\")
 {id}             {yylval.str = new std::string(yytext); return ID;}
 {char}           {return CHAR;}
 {vect}           {return VECT;}
+{attribute}      {return ATTRIBUTE;}
 "&"              {return '&';}
 "="              {return '=';}
 "<"              {return '<';}

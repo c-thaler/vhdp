@@ -60,13 +60,14 @@
 
 %token <str> ID
 %token LITERAL CHAR VECT
+%token ATTRIBUTE
 
 %left AND OR XOR
 %left '=' '<' '>'
 %left '+' '-'
 %left '*' '/'
 %left '&'
-%left TO DOWNTO
+%left TO DOWNTO '\''
 
 %type <n> direction
 %type <str> type
@@ -374,6 +375,7 @@ cond_assign:
 expr:
       '(' expr ')'
     | '-' expr
+    | NOT expr
     | expr AND expr
     | expr OR expr
     | expr XOR expr
@@ -387,7 +389,7 @@ expr:
     | expr '>' expr
     | expr TO expr
     | expr DOWNTO expr
-    | name '\'' name
+    | name ATTRIBUTE
     | CHAR
     | VECT
     | name
