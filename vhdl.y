@@ -56,7 +56,9 @@
 %token XOR AND OR NOT CONCAT
 %token S_ASSIGN V_ASSIGN ASSOC
 %token OTHERS RANGE
-%token PURE FUNCTION RETURN
+%token PURE FUNCTION RETURN EXIT
+%token SUBTYPE TYPE
+%token ARRAY
 
 %token <str> ID
 %token LITERAL CHAR VECT
@@ -239,6 +241,7 @@ arch_decl:
     | CONSTANT ID ':' type ';'
     | CONSTANT ID ':' type V_ASSIGN expr ';'
     | function
+    | type_decl
     ;
 
 arch_body:
@@ -250,6 +253,23 @@ arch_line:
       signal_assign
     | process
     | instantiation
+    ;
+
+type_decl:
+      typedef
+    | subtype
+    ;
+
+typedef:
+      TYPE ID IS type_desc ';'
+    ;
+
+type_desc:
+      ARRAY '(' ID RANGE '<' '>' ')' OF ID
+    ;
+
+subtype:
+      SUBTYPE ID IS ID RANGE expr ';'
     ;
 
 // Function
@@ -329,6 +349,7 @@ proc_line:
     | for_loop
     | if_then
     | return
+    | EXIT ';'
     ;
 
 instantiation:

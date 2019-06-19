@@ -52,7 +52,11 @@ vect      (\"[01-x]*\")
 "constant"       {return CONSTANT;}
 "pure"           {return PURE;}
 "function"       {return FUNCTION;}
+"type"           {return TYPE;}
+"subtype"        {return SUBTYPE;}
+"array"          {return ARRAY;}
 "return"         {return RETURN;}
+"exit"           {return EXIT;}
 "not"            {return NOT;}
 "and"            {return AND;}
 "or"             {return OR;}
