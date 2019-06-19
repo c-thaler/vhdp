@@ -82,7 +82,6 @@ vect      (\"[01-x]*\")
 "("              {return '(';}
 ")"              {return ')';}
 "\""             {return '\"';}
-"\'"             {return '\'';}
 {space}          ;
 {comment}        ;
 \n               {++linenum;}

@@ -62,7 +62,7 @@
 %token LITERAL CHAR VECT
 %token ATTRIBUTE
 
-%left AND OR XOR
+%left AND OR XOR NOT
 %left '=' '<' '>'
 %left '+' '-'
 %left '*' '/'
