@@ -45,6 +45,7 @@ vect      (\"[01-x]*\")
 "then"           {return THEN;}
 "when"           {return WHEN;}
 "loop"           {return LOOP;}
+"generate"       {return GENERATE;}
 "to"             {return TO;}
 "downto"         {return DOWNTO;}
 "signal"         {return SIGNAL;}
@@ -71,6 +72,7 @@ vect      (\"[01-x]*\")
 {char}           {return CHAR;}
 {vect}           {return VECT;}
 {attribute}      {return ATTRIBUTE;}
+"/="             {return UNEQUAL;}
 "&"              {return '&';}
 "="              {return '=';}
 "<"              {return '<';}

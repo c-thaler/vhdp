@@ -59,13 +59,14 @@
 %token PURE FUNCTION RETURN EXIT
 %token SUBTYPE TYPE
 %token ARRAY
+%token UNEQUAL
 
 %token <str> ID
 %token LITERAL CHAR VECT
 %token ATTRIBUTE
 
 %left AND OR XOR NOT
-%left '=' '<' '>'
+%left '=' '<' '>' UNEQUAL
 %left '+' '-'
 %left '*' '/'
 %left '&'
@@ -113,7 +114,12 @@ name:
     ;
 
 name_param:
-    ID '(' expr_list ')'
+    ID param_list
+    ;
+
+param_list:
+      param_list '(' expr_list ')'
+    | '(' expr_list ')'
     ;
 
 expr_list:
@@ -253,6 +259,7 @@ arch_line:
       signal_assign
     | process
     | instantiation
+    | for_generate
     ;
 
 type_decl:
@@ -406,6 +413,7 @@ expr:
     | expr '*' expr
     | expr '/' expr
     | expr '=' expr
+    | expr UNEQUAL expr
     | expr '<' expr
     | expr '>' expr
     | expr TO expr
@@ -438,6 +446,10 @@ for_loop:
 if_then:
     IF expr THEN proc_body END IF ';'
     | IF expr THEN proc_body ELSE proc_body END IF ';'
+    ;
+
+for_generate:
+    ID ':' FOR ID IN expr GENERATE proc_body END GENERATE ';'
     ;
 
 return:
